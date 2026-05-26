@@ -47,7 +47,10 @@ export default function ResumePreview({ resumeData }) {
         }
       `}</style>
 
-      <div className="print-area w-full max-w-[216mm] bg-white text-neutral-900 shadow-2xl rounded-sm p-8 sm:p-12 flex flex-col h-auto border border-neutral-200 transition-all">
+      <div 
+        className="print-area w-full max-w-[216mm] bg-white text-neutral-900 shadow-2xl rounded-sm p-8 sm:p-12 flex flex-col h-auto border border-neutral-200 transition-all"
+        style={{ fontFamily: resumeData.fontFamily || "'Times New Roman', Times, serif" }}
+      >
         
         <div className="space-y-5">
           {/* Document Header Panel */}

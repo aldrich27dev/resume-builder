@@ -1,11 +1,13 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Sparkles, Printer, AlertCircle, X, Code } from "lucide-react";
 import ResumeForm from "./components/ResumeForm";
 import ResumePreview from "./components/ResumePreview";
 
+
 // Baseline snapshot definition used to compare and block unchanged prints
 const INITIAL_BASELINE_DATA = {
   fullName: "JOHN DOE",
+  fontFamily: "'Times New Roman', Times, serif",
   address: "123 Example St., Brgy. Sample, Manila City",
   phone: "+63 900 000 0000",
   email: "johndoe@example.com",
@@ -49,10 +51,30 @@ const INITIAL_BASELINE_DATA = {
   signature: ""
 };
 
+
+
 export default function App() {
-  const [resumeData, setResumeData] = useState({ ...INITIAL_BASELINE_DATA });
+  // Initialize state from localStorage if available, fallback to INITIAL_BASELINE_DATA
+  const [resumeData, setResumeData] = useState(() => {
+    const savedData = localStorage.getItem("resume_builder_draft");
+    if (savedData) {
+      try {
+        return JSON.parse(savedData);
+      } catch (error) {
+        console.error("Error parsing saved resume data:", error);
+        return { ...INITIAL_BASELINE_DATA };
+      }
+    }
+    return { ...INITIAL_BASELINE_DATA };
+  });
+
   const [showModal, setShowModal] = useState(false);
   const [showCreditModal, setShowCreditModal] = useState(false);
+
+  // Automatically save state updates to localStorage whenever resumeData changes
+  useEffect(() => {
+    localStorage.setItem("resume_builder_draft", JSON.stringify(resumeData));
+  }, [resumeData]);
 
   // 1. Strict State Dirtiness Guard: Compares present configuration state with original data properties
   const isDirty = useMemo(() => {
@@ -99,6 +121,13 @@ export default function App() {
 
     // Revert global document variables seamlessly to clean environment state
     document.title = originalTitle;
+  };
+
+  // Clear data and reset back to initial default values with safety validation prompt
+  const handleReset = () => {
+    if (window.confirm("Are you sure you want to reset the form? All unsaved progress will be cleared.")) {
+      setResumeData({ ...INITIAL_BASELINE_DATA });
+    }
   };
 
   return (

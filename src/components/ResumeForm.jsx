@@ -1,5 +1,5 @@
 import React from "react";
-import { User, Plus, Trash2, Briefcase, GraduationCap, Award, Code, BookOpen, Users, Eye, EyeOff } from "lucide-react";
+import { User, Plus, Trash2, Briefcase, GraduationCap, Award, Code, BookOpen, Users, Eye, EyeOff, Type } from "lucide-react";
 
 export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormValid }) {
   // Initialize visibility state if not present in parent state
@@ -70,6 +70,10 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
     }
   };
 
+  const handleFontChange = (e) => {
+    setResumeData((prev) => ({ ...prev, fontFamily: e.target.value }));
+  };
+
   // Field validation helpers to mark raw placeholders as invalid styling anchors
   const isInvalidName = !resumeData.fullName?.trim() || resumeData.fullName === "JOHN DOE";
   const isInvalidAddress = !resumeData.address?.trim() || resumeData.address.includes("123 Example St.");
@@ -79,6 +83,23 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar shadow-xl">
       
+      {/* Dynamic Font Selection Block */}
+      <div className="space-y-2 pb-4 border-b border-neutral-800/80">
+        <label className="text-xs font-bold flex items-center gap-2 uppercase tracking-wide text-indigo-400">
+          <Type className="w-4 h-4" /> Typography Layout
+        </label>
+        <select
+          value={resumeData.fontFamily || "Times New Roman"}
+          onChange={handleFontChange}
+          className="w-full bg-neutral-950 border border-neutral-800 text-xs rounded-xl px-3 py-2 text-neutral-200 focus:outline-none focus:border-indigo-500 cursor-pointer transition"
+        >
+          <option value="'Times New Roman', Times, serif">Times New Roman (Serif)</option>
+          <option value="Arial, Helvetica, sans-serif">Arial (Sans-Serif)</option>
+          <option value="Georgia, serif">Georgia (Elegant Serif)</option>
+          <option value="ui-sans-serif, system-ui, sans-serif">Helvetica / System Sans</option>
+        </select>
+      </div>
+
       {/* 1. Header & Image Upload Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
