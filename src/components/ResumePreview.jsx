@@ -63,7 +63,8 @@ export default function ResumePreview({ resumeData }) {
                 <p>Email: {resumeData.email}</p>
               </div>
             </div>
-            {resumeData.avatar && (
+            {/* Added check for resumeData.showPhotoOnResume alongside existing avatar state */}
+            {resumeData.showPhotoOnResume && resumeData.avatar && (
               <div className="w-24 h-24 rounded-none border border-neutral-400 bg-neutral-100 overflow-hidden flex-shrink-0">
                 <img src={resumeData.avatar} alt="Formal Headshot Portrait" className="w-full h-full object-cover" />
               </div>

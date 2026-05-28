@@ -1,5 +1,9 @@
 import React from "react";
-import { User, Plus, Trash2, Briefcase, GraduationCap, Award, Code, BookOpen, Users, Eye, EyeOff, Type } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  User, Plus, Trash2, Briefcase, GraduationCap, 
+  Award, Code, BookOpen, Users, Eye, EyeOff, Type, Image
+} from "lucide-react";
 
 export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormValid }) {
   // Initialize visibility state if not present in parent state
@@ -14,12 +18,22 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
   };
 
   const toggleSectionVisibility = (section) => {
+    setResumeData((prev) => {
+      const currentVisible = prev.visibleSections || visibleSections;
+      return {
+        ...prev,
+        visibleSections: {
+          ...currentVisible,
+          [section]: !currentVisible[section],
+        },
+      };
+    });
+  };
+
+  const handleTogglePhotoVisibility = () => {
     setResumeData((prev) => ({
       ...prev,
-      visibleSections: {
-        ...visibleSections,
-        [section]: !visibleSections[section],
-      },
+      showPhotoOnResume: !prev.showPhotoOnResume,
     }));
   };
 
@@ -80,28 +94,45 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
   const isInvalidPhone = !resumeData.phone?.trim() || resumeData.phone === "+63 900 000 0000";
   const isInvalidEmail = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resumeData.email || "") || resumeData.email === "johndoe@example.com";
 
+  // Animation Variant Sets
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.05 } }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 12 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 25 } },
+    exit: { opacity: 0, scale: 0.95, transition: { duration: 0.15 } }
+  };
+
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar shadow-xl">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar shadow-xl"
+    >
       
       {/* Dynamic Font Selection Block */}
-      <div className="space-y-2 pb-4 border-b border-neutral-800/80">
+      <motion.div variants={itemVariants} className="space-y-2 pb-4 border-b border-neutral-800/80">
         <label className="text-xs font-bold flex items-center gap-2 uppercase tracking-wide text-indigo-400">
           <Type className="w-4 h-4" /> Typography Layout
         </label>
         <select
           value={resumeData.fontFamily || "Times New Roman"}
           onChange={handleFontChange}
-          className="w-full bg-neutral-950 border border-neutral-800 text-xs rounded-xl px-3 py-2 text-neutral-200 focus:outline-none focus:border-indigo-500 cursor-pointer transition"
+          className="w-full bg-neutral-950 border border-neutral-800 text-xs rounded-xl px-3 py-2 text-neutral-200 focus:outline-none focus:border-indigo-500 cursor-pointer transition focus:ring-1 focus:ring-indigo-500"
         >
           <option value="'Times New Roman', Times, serif">Times New Roman (Serif)</option>
           <option value="Arial, Helvetica, sans-serif">Arial (Sans-Serif)</option>
           <option value="Georgia, serif">Georgia (Elegant Serif)</option>
           <option value="ui-sans-serif, system-ui, sans-serif">Helvetica / System Sans</option>
         </select>
-      </div>
+      </motion.div>
 
       {/* 1. Header & Image Upload Section */}
-      <div className="space-y-4">
+      <motion.div variants={itemVariants} className="space-y-4">
         <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
           <h2 className="text-lg font-bold flex items-center gap-2 text-neutral-100">
             <User className="w-5 h-5 text-indigo-400" />
@@ -130,13 +161,47 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
           <div className="space-y-2 w-full text-center sm:text-left flex-1">
             <p className="text-xs text-neutral-400">Upload your raw selfie or landscape portrait photo to show directly on your resume layout.</p>
             <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-              <label className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg cursor-pointer transition">
+              <label className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg cursor-pointer transition active:scale-95">
                 Choose Photo
                 <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
               </label>
             </div>
           </div>
         </div>
+
+        {/* 1x1 Resume Layout Visibility Toggle Button */}
+        {resumeData.avatar && (
+          <div className="flex items-center justify-between bg-neutral-950 p-3 rounded-xl border border-neutral-800/60">
+            <div className="flex items-center gap-2">
+              <Image className="w-4 h-4 text-indigo-400" />
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-neutral-200">1x1 Photo Preview Box</span>
+                <span className="text-[10px] text-neutral-500">Show or hide image module inside ResumePreview</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleTogglePhotoVisibility}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all select-none border cursor-pointer ${
+                resumeData.showPhotoOnResume
+                  ? "bg-indigo-600/10 text-indigo-400 border-indigo-500/30 hover:bg-indigo-600/20"
+                  : "bg-neutral-900 text-neutral-500 border-neutral-800 hover:text-neutral-400"
+              }`}
+            >
+              {resumeData.showPhotoOnResume ? (
+                <>
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Visible on Resume</span>
+                </>
+              ) : (
+                <>
+                  <EyeOff className="w-3.5 h-3.5" />
+                  <span>Hidden on Resume</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
 
         <div className="space-y-3">
           <div>
@@ -147,10 +212,10 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
               type="text" 
               name="fullName" 
               required
-              value={resumeData.fullName} 
+              value={resumeData.fullName || ""} 
               onChange={handleChange} 
-              className={`w-full bg-neutral-950 border rounded-xl px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-indigo-500 transition-all ${
-                isInvalidName ? "border-red-500/50 bg-red-950/10 focus:border-red-500" : "border-neutral-800"
+              className={`w-full bg-neutral-950 border rounded-xl px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all ${
+                isInvalidName ? "border-red-500/50 bg-red-950/10 focus:border-red-500 focus:ring-red-500" : "border-neutral-800"
               }`} 
             />
             {isInvalidName && <p className="text-[10px] text-red-400 mt-1">Please change the default name placeholder.</p>}
@@ -164,10 +229,10 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
               type="text" 
               name="address" 
               required
-              value={resumeData.address} 
+              value={resumeData.address || ""} 
               onChange={handleChange} 
-              className={`w-full bg-neutral-950 border rounded-xl px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-indigo-500 transition-all ${
-                isInvalidAddress ? "border-red-500/50 bg-red-950/10 focus:border-red-500" : "border-neutral-800"
+              className={`w-full bg-neutral-950 border rounded-xl px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all ${
+                isInvalidAddress ? "border-red-500/50 bg-red-950/10 focus:border-red-500 focus:ring-red-500" : "border-neutral-800"
               }`} 
             />
             {isInvalidAddress && <p className="text-[10px] text-red-400 mt-1">Please provide your real residential location address.</p>}
@@ -182,10 +247,10 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
                 type="text" 
                 name="phone" 
                 required
-                value={resumeData.phone} 
+                value={resumeData.phone || ""} 
                 onChange={handleChange} 
-                className={`w-full bg-neutral-950 border rounded-xl px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-indigo-500 transition-all ${
-                  isInvalidPhone ? "border-red-500/50 bg-red-950/10 focus:border-red-500" : "border-neutral-800"
+                className={`w-full bg-neutral-950 border rounded-xl px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all ${
+                  isInvalidPhone ? "border-red-500/50 bg-red-950/10 focus:border-red-500 focus:ring-red-500" : "border-neutral-800"
                 }`} 
               />
               {isInvalidPhone && <p className="text-[10px] text-red-400 mt-1">Provide a genuine contact string pattern.</p>}
@@ -199,10 +264,10 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
                 type="email" 
                 name="email" 
                 required
-                value={resumeData.email} 
+                value={resumeData.email || ""} 
                 onChange={handleChange} 
-                className={`w-full bg-neutral-950 border rounded-xl px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-indigo-500 transition-all ${
-                  isInvalidEmail ? "border-red-500/50 bg-red-950/10 focus:border-red-500" : "border-neutral-800"
+                className={`w-full bg-neutral-950 border rounded-xl px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all ${
+                  isInvalidEmail ? "border-red-500/50 bg-red-950/10 focus:border-red-500 focus:ring-red-500" : "border-neutral-800"
                 }`} 
               />
               {isInvalidEmail && <p className="text-[10px] text-red-400 mt-1">Enter a valid and updated email address.</p>}
@@ -260,15 +325,25 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
                 {visibleSections.objective ? "Visible" : "Hidden"}
               </button>
             </div>
-            {visibleSections.objective && (
-              <textarea name="objective" rows={3} value={resumeData.objective} onChange={handleChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-indigo-500 resize-none text-justify" />
-            )}
+            <AnimatePresence initial={false}>
+              {visibleSections.objective && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <textarea name="objective" rows={3} value={resumeData.objective || ""} onChange={handleChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-indigo-500 resize-none text-justify focus:ring-1 focus:ring-indigo-500" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* 2. Educational Background Section */}
-      <div className="border-t border-neutral-800/80 pt-4 space-y-3">
+      <motion.div variants={itemVariants} className="border-t border-neutral-800/80 pt-4 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold flex items-center gap-2 uppercase tracking-wide text-indigo-400">
             <GraduationCap className="w-4 h-4" />
@@ -286,22 +361,33 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
             )}
           </div>
         </div>
-        {visibleSections.education && resumeData.education.map((edu, idx) => (
-          <div key={idx} className="bg-neutral-950 p-3 rounded-xl border border-neutral-800/60 space-y-2 relative group">
-            <span className="text-[11px] font-bold tracking-wider uppercase text-neutral-500 block">Level Tier {idx + 1}</span>
-            {resumeData.education.length > 1 && (
-              <button type="button" onClick={() => removeItem("education", idx)} className="absolute top-2 right-2 text-neutral-500 hover:text-red-400 transition p-1">
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <input type="text" value={edu.level} onChange={(e) => handleNestedChange("education", idx, "level", e.target.value)} className="w-11/12 bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2.5 py-1.5 text-neutral-200 focus:outline-none focus:border-indigo-500" placeholder="e.g. Senior Highschool" />
-            <textarea rows={2} value={edu.detail} onChange={(e) => handleNestedChange("education", idx, "detail", e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2.5 py-1.5 text-neutral-200 resize-none focus:outline-none focus:border-indigo-500" placeholder="School Name, Campus, Year, Strand / Course" />
-          </div>
-        ))}
-      </div>
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {visibleSections.education && resumeData.education?.map((edu, idx) => (
+              <motion.div 
+                key={idx}
+                variants={itemVariants}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                className="bg-neutral-950 p-3 rounded-xl border border-neutral-800/60 space-y-2 relative group layout-block"
+              >
+                <span className="text-[11px] font-bold tracking-wider uppercase text-neutral-500 block">Level Tier {idx + 1}</span>
+                {resumeData.education.length > 1 && (
+                  <button type="button" onClick={() => removeItem("education", idx)} className="absolute top-2 right-2 text-neutral-500 hover:text-red-400 transition p-1">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <input type="text" value={edu.level || ""} onChange={(e) => handleNestedChange("education", idx, "level", e.target.value)} className="w-11/12 bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2.5 py-1.5 text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" placeholder="e.g. Senior Highschool" />
+                <textarea rows={2} value={edu.detail || ""} onChange={(e) => handleNestedChange("education", idx, "detail", e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2.5 py-1.5 text-neutral-200 resize-none focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" placeholder="School Name, Campus, Year, Strand / Course" />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </motion.div>
 
       {/* 3. Work Experience Section */}
-      <div className="border-t border-neutral-800/80 pt-4 space-y-3">
+      <motion.div variants={itemVariants} className="border-t border-neutral-800/80 pt-4 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold flex items-center gap-2 uppercase tracking-wide text-indigo-400">
             <Briefcase className="w-4 h-4" />
@@ -319,21 +405,32 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
             )}
           </div>
         </div>
-        {visibleSections.experience && resumeData.experience.map((exp, idx) => (
-          <div key={idx} className="bg-neutral-950 p-3 rounded-xl border border-neutral-800/60 space-y-2 relative group">
-            <button type="button" onClick={() => removeItem("experience", idx)} className="absolute top-2 right-2 text-neutral-500 hover:text-red-400 transition p-1">
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-            <input type="text" value={exp.date} onChange={(e) => handleNestedChange("experience", idx, "date", e.target.value)} className="w-5/6 bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2 py-1 text-neutral-200" placeholder="Duration (e.g. Dec 2024 - June 2025)" />
-            <input type="text" value={exp.role} onChange={(e) => handleNestedChange("experience", idx, "role", e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2 py-1 text-neutral-200" placeholder="Job Title / Role Assignment" />
-            <input type="text" value={exp.company} onChange={(e) => handleNestedChange("experience", idx, "company", e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2 py-1 text-neutral-200" placeholder="Company Name" />
-            <input type="text" value={exp.location} onChange={(e) => handleNestedChange("experience", idx, "location", e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2 py-1 text-neutral-200" placeholder="Full Location Details" />
-          </div>
-        ))}
-      </div>
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {visibleSections.experience && resumeData.experience?.map((exp, idx) => (
+              <motion.div 
+                key={idx}
+                variants={itemVariants}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                className="bg-neutral-950 p-3 rounded-xl border border-neutral-800/60 space-y-2 relative group"
+              >
+                <button type="button" onClick={() => removeItem("experience", idx)} className="absolute top-2 right-2 text-neutral-500 hover:text-red-400 transition p-1">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+                <input type="text" value={exp.date || ""} onChange={(e) => handleNestedChange("experience", idx, "date", e.target.value)} className="w-5/6 bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2 py-1 text-neutral-200 focus:ring-1 focus:ring-indigo-500" placeholder="Duration (e.g. Dec 2024 - June 2025)" />
+                <input type="text" value={exp.role || ""} onChange={(e) => handleNestedChange("experience", idx, "role", e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2 py-1 text-neutral-200 focus:ring-1 focus:ring-indigo-500" placeholder="Job Title / Role Assignment" />
+                <input type="text" value={exp.company || ""} onChange={(e) => handleNestedChange("experience", idx, "company", e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2 py-1 text-neutral-200 focus:ring-1 focus:ring-indigo-500" placeholder="Company Name" />
+                <input type="text" value={exp.location || ""} onChange={(e) => handleNestedChange("experience", idx, "location", e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2 py-1 text-neutral-200 focus:ring-1 focus:ring-indigo-500" placeholder="Full Location Details" />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </motion.div>
 
       {/* 4. Awards Section */}
-      <div className="border-t border-neutral-800/80 pt-4 space-y-3">
+      <motion.div variants={itemVariants} className="border-t border-neutral-800/80 pt-4 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold flex items-center gap-2 uppercase tracking-wide text-indigo-400">
             <Award className="w-4 h-4" />
@@ -351,18 +448,29 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
             )}
           </div>
         </div>
-        {visibleSections.awards && resumeData.awards.map((award, idx) => (
-          <div key={idx} className="flex items-center gap-2">
-            <input type="text" value={award} onChange={(e) => handleArrayItemChange("awards", idx, e.target.value)} className="flex-1 bg-neutral-950 border border-neutral-800 text-xs rounded-xl px-3 py-2 text-neutral-200 focus:outline-none focus:border-indigo-500" placeholder="Certificate description details" />
-            <button type="button" onClick={() => removeItem("awards", idx)} className="text-neutral-500 hover:text-red-400 p-1 transition">
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        ))}
-      </div>
+        <div className="space-y-2">
+          <AnimatePresence initial={false}>
+            {visibleSections.awards && resumeData.awards?.map((award, idx) => (
+              <motion.div 
+                key={idx}
+                variants={itemVariants}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                className="flex items-center gap-2"
+              >
+                <input type="text" value={award || ""} onChange={(e) => handleArrayItemChange("awards", idx, e.target.value)} className="flex-1 bg-neutral-950 border border-neutral-800 text-xs rounded-xl px-3 py-2 text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" placeholder="Certificate description details" />
+                <button type="button" onClick={() => removeItem("awards", idx)} className="text-neutral-500 hover:text-red-400 p-1 transition flex-shrink-0">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </motion.div>
 
       {/* 5. Core Skills Section */}
-      <div className="border-t border-neutral-800/80 pt-4 space-y-3">
+      <motion.div variants={itemVariants} className="border-t border-neutral-800/80 pt-4 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold flex items-center gap-2 uppercase tracking-wide text-indigo-400">
             <Code className="w-4 h-4" />
@@ -380,22 +488,36 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
             )}
           </div>
         </div>
-        {visibleSections.skills && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {resumeData.skills.map((skill, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <input type="text" value={skill} onChange={(e) => handleArrayItemChange("skills", idx, e.target.value)} className="flex-1 bg-neutral-950 border border-neutral-800 text-xs rounded-xl px-2.5 py-1.5 text-neutral-200" placeholder="Skill name" />
-                <button type="button" onClick={() => removeItem("skills", idx)} className="text-neutral-500 hover:text-red-400 p-1 transition">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        <AnimatePresence initial={false}>
+          {visibleSections.skills && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-hidden"
+            >
+              {resumeData.skills?.map((skill, idx) => (
+                <motion.div 
+                  key={idx}
+                  variants={itemVariants}
+                  initial="hidden"
+                  animate="show"
+                  exit="exit"
+                  className="flex items-center gap-2"
+                >
+                  <input type="text" value={skill || ""} onChange={(e) => handleArrayItemChange("skills", idx, e.target.value)} className="flex-1 bg-neutral-950 border border-neutral-800 text-xs rounded-xl px-2.5 py-1.5 text-neutral-200 focus:ring-1 focus:ring-indigo-500" placeholder="Skill name" />
+                  <button type="button" onClick={() => removeItem("skills", idx)} className="text-neutral-500 hover:text-red-400 p-1 transition flex-shrink-0">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       {/* 6. Seminars and Trainings Section */}
-      <div className="border-t border-neutral-800/80 pt-4 space-y-3">
+      <motion.div variants={itemVariants} className="border-t border-neutral-800/80 pt-4 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold flex items-center gap-2 uppercase tracking-wide text-indigo-400">
             <BookOpen className="w-4 h-4" />
@@ -413,18 +535,29 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
             )}
           </div>
         </div>
-        {visibleSections.seminars && resumeData.seminars.map((seminar, idx) => (
-          <div key={idx} className="flex items-center gap-2">
-            <textarea rows={2} value={seminar} onChange={(e) => handleArrayItemChange("seminars", idx, e.target.value)} className="flex-1 bg-neutral-950 border border-neutral-800 text-xs rounded-xl px-3 py-1.5 text-neutral-200 resize-none" placeholder="Seminar info details, date, venue" />
-            <button type="button" onClick={() => removeItem("seminars", idx)} className="text-neutral-500 hover:text-red-400 p-1 transition flex-shrink-0">
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        ))}
-      </div>
+        <div className="space-y-2">
+          <AnimatePresence initial={false}>
+            {visibleSections.seminars && resumeData.seminars?.map((seminar, idx) => (
+              <motion.div 
+                key={idx}
+                variants={itemVariants}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                className="flex items-center gap-2"
+              >
+                <textarea rows={2} value={seminar || ""} onChange={(e) => handleArrayItemChange("seminars", idx, e.target.value)} className="flex-1 bg-neutral-950 border border-neutral-800 text-xs rounded-xl px-3 py-1.5 text-neutral-200 resize-none focus:ring-1 focus:ring-indigo-500" placeholder="Seminar info details, date, venue" />
+                <button type="button" onClick={() => removeItem("seminars", idx)} className="text-neutral-500 hover:text-red-400 p-1 transition flex-shrink-0">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </motion.div>
 
       {/* 7. Character References Section */}
-      <div className="border-t border-neutral-800/80 pt-4 space-y-3">
+      <motion.div variants={itemVariants} className="border-t border-neutral-800/80 pt-4 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold flex items-center gap-2 uppercase tracking-wide text-indigo-400">
             <Users className="w-4 h-4" />
@@ -442,22 +575,36 @@ export default function ResumeForm({ resumeData, setResumeData, isDirty, isFormV
             )}
           </div>
         </div>
-        {visibleSections.references && (
-          <div className="grid grid-cols-1 gap-3">
-            {resumeData.references.map((ref, idx) => (
-              <div key={idx} className="bg-neutral-950 p-3 rounded-xl border border-neutral-800/60 grid grid-cols-1 sm:grid-cols-3 gap-2 relative">
-                <button type="button" onClick={() => removeItem("references", idx)} className="absolute top-1.5 right-1.5 text-neutral-500 hover:text-red-400 transition p-1">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-                <input type="text" value={ref.name} onChange={(e) => handleNestedChange("references", idx, "name", e.target.value)} className="bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2.5 py-1.5 text-neutral-200" placeholder="Full Name" />
-                <input type="text" value={ref.role} onChange={(e) => handleNestedChange("references", idx, "role", e.target.value)} className="bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2.5 py-1.5 text-neutral-200" placeholder="Title/Affiliation" />
-                <input type="text" value={ref.contact} onChange={(e) => handleNestedChange("references", idx, "contact", e.target.value)} className="bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2.5 py-1.5 text-neutral-200 sm:col-span-1 col-span-2" placeholder="Contact number" />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        <AnimatePresence initial={false}>
+          {visibleSections.references && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="grid grid-cols-1 gap-3 overflow-hidden"
+            >
+              {resumeData.references?.map((ref, idx) => (
+                <motion.div 
+                  key={idx}
+                  variants={itemVariants}
+                  initial="hidden"
+                  animate="show"
+                  exit="exit"
+                  className="bg-neutral-950 p-3 rounded-xl border border-neutral-800/60 grid grid-cols-1 sm:grid-cols-3 gap-2 relative"
+                >
+                  <button type="button" onClick={() => removeItem("references", idx)} className="absolute top-1.5 right-1.5 text-neutral-500 hover:text-red-400 transition p-1 z-10">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  <input type="text" value={ref.name || ""} onChange={(e) => handleNestedChange("references", idx, "name", e.target.value)} className="bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2.5 py-1.5 text-neutral-200 focus:ring-1 focus:ring-indigo-500" placeholder="Full Name" />
+                  <input type="text" value={ref.role || ""} onChange={(e) => handleNestedChange("references", idx, "role", e.target.value)} className="bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2.5 py-1.5 text-neutral-200 focus:ring-1 focus:ring-indigo-500" placeholder="Title/Affiliation" />
+                  <input type="text" value={ref.contact || ""} onChange={(e) => handleNestedChange("references", idx, "contact", e.target.value)} className="bg-neutral-900 border border-neutral-800 text-xs rounded-lg px-2.5 py-1.5 text-neutral-200 sm:col-span-1 col-span-2 focus:ring-1 focus:ring-indigo-500" placeholder="Contact number" />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
-    </div>
+    </motion.div>
   );
 }
